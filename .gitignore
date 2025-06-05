@@ -1,0 +1,5 @@
+# macOS-Tempdateien
+.DS_Store
+
+# Node-Modules oder andere Ordner (falls du später Node-Pakete nutzt)
+node_modules/
