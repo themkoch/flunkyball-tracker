@@ -133,8 +133,20 @@
                 <p id="totalHits">0</p>
             </div>
             <div class="stat-card">
+                <h3>Gesamt-Flaschentreffer</h3>
+                <p id="totalBottles">0</p>
+            </div>
+            <div class="stat-card">
                 <h3>Durchschnittliche Treffer</h3>
                 <p id="avgHits">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Top Flaschentreffer</h3>
+                <p id="topBottles">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Top Treffer/Spiel</h3>
+                <p id="topHitsPerGame">-</p>
             </div>
             <div class="stat-card">
                 <h3>Top Scorer</h3>
@@ -155,6 +167,7 @@
                     <th>Treffer</th>
                     <th>Siege</th>
                     <th>Spiele</th>
+                    <th>Flaschentreffer</th>
                     <th>Treffer/Spiel</th>
                     <th>Siege/Spiel (%)</th>
                     <th>Aktion</th>
@@ -165,29 +178,29 @@
         </table>
     </main>
     <footer>
-        &copy; 2025 ManuSoft
+        &copy; 2025 Flunkyball Tracker
     </footer>
     <script>
         const STORAGE_KEY = 'flunkyball_players';
         let players = [
-            {name: 'Voike', hits: 0, wins: 0, games: 0},
-            {name: 'Will', hits: 0, wins: 0, games: 0},
-            {name: 'Tobi', hits: 0, wins: 0, games: 0},
-            {name: 'Flecker', hits: 0, wins: 0, games: 0},
-            {name: 'Merkwitz', hits: 0, wins: 0, games: 0},
-            {name: 'Alex', hits: 0, wins: 0, games: 0},
-            {name: 'Niggles', hits: 0, wins: 0, games: 0},
-            {name: 'Marci', hits: 0, wins: 0, games: 0},
-            {name: 'Frank', hits: 0, wins: 0, games: 0},
-            {name: 'Krane', hits: 0, wins: 0, games: 0},
-            {name: 'Sebastian', hits: 0, wins: 0, games: 0},
-            {name: 'Sven', hits: 0, wins: 0, games: 0},
-            {name: 'Manu', hits: 0, wins: 0, games: 0},
-            {name: 'Robert', hits: 0, wins: 0, games: 0},
-            {name: 'Daniel', hits: 0, wins: 0, games: 0},
-            {name: 'Dominic', hits: 0, wins: 0, games: 0},
-            {name: 'Rogge', hits: 0, wins: 0, games: 0},
-            {name: 'Tim', hits: 0, wins: 0, games: 0}
+            {name: 'Voike', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Will', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Tobi', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Flecker', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Merkwitz', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Alex', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Niggles', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Marci', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Frank', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Krane', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Sebastian', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Sven', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Manu', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Robert', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Daniel', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Dominic', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Rogge', hits: 0, wins: 0, games: 0, bottles: 0},
+            {name: 'Tim', hits: 0, wins: 0, games: 0, bottles: 0}
         ];
         let hitsChart;
 
@@ -196,11 +209,11 @@
         }
 
         function exportCSV() {
-            let csv = 'Name,Treffer,Siege,Spiele,Treffer/Spiel,Siege/Spiel (%)\n';
+            let csv = 'Name,Treffer,Siege,Spiele,Flaschentreffer,Treffer/Spiel,Siege/Spiel (%)\n';
             players.forEach(p => {
                 const tpg = p.games > 0 ? (p.hits / p.games).toFixed(1) : 0;
                 const wpg = p.games > 0 ? ((p.wins / p.games) * 100).toFixed(1) : 0;
-                csv += `${p.name},${p.hits},${p.wins},${p.games},${tpg},${wpg}%\n`;
+                csv += `${p.name},${p.hits},${p.wins},${p.games},${p.bottles},${tpg},${wpg}%\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -225,17 +238,32 @@
         function updateOverview() {
             const totalPlayersEl = document.getElementById('totalPlayers');
             const totalHitsEl = document.getElementById('totalHits');
+            const totalBottlesEl = document.getElementById('totalBottles');
             const avgHitsEl = document.getElementById('avgHits');
+            const topBottlesEl = document.getElementById('topBottles');
+            const topHitsPerGameEl = document.getElementById('topHitsPerGame');
             const topScorerEl = document.getElementById('topScorer');
             const topWinnerEl = document.getElementById('topWinner');
 
             const totalPlayers = players.length;
             const totalHits = players.reduce((sum, p) => sum + p.hits, 0);
+            const totalBottles = players.reduce((sum, p) => sum + p.bottles, 0);
             const avgHits = totalPlayers > 0 ? (totalHits / totalPlayers).toFixed(1) : 0;
 
             totalPlayersEl.textContent = totalPlayers;
             totalHitsEl.textContent = totalHits;
+            totalBottlesEl.textContent = totalBottles;
             avgHitsEl.textContent = avgHits;
+
+            const sortedBottles = [...players].sort((a, b) => b.bottles - a.bottles);
+            const top3Bottles = sortedBottles.slice(0, 3).map((p, i) => `${i+1}. <strong>${p.name}</strong> (${p.bottles})`).join("<br>");
+            topBottlesEl.innerHTML = top3Bottles;
+
+            const sortedHitsPerGame = [...players].filter(p => p.games > 0)
+                .sort((a, b) => (b.hits / b.games) - (a.hits / a.games));
+            const top3HitsPerGame = sortedHitsPerGame.slice(0, 3)
+                .map((p, i) => `${i+1}. <strong>${p.name}</strong> (${(p.hits / p.games).toFixed(1)})`).join("<br>");
+            topHitsPerGameEl.innerHTML = top3HitsPerGame || '-';
 
             const maxHits = Math.max(...players.map(p => p.hits));
             const topHitPlayers = players.filter(p => p.hits === maxHits).map(p => `<strong>${p.name}</strong> (${p.hits})`);
@@ -257,10 +285,7 @@
                     labels,
                     datasets: [{ label: 'Treffer', data, backgroundColor: 'rgba(255, 102, 0, 0.7)' }]
                 },
-                options: {
-                    responsive: true,
-                    scales: { y: { beginAtZero: true } }
-                }
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
             });
         }
 
@@ -279,13 +304,26 @@
                 const hitsTd = document.createElement('td'); hitsTd.textContent = player.hits;
                 const winsTd = document.createElement('td'); winsTd.textContent = player.wins;
                 const gamesTd = document.createElement('td'); gamesTd.textContent = player.games;
+                const bottlesTd = document.createElement('td'); bottlesTd.textContent = player.bottles;
                 const hitsPerGameTd = document.createElement('td'); hitsPerGameTd.textContent = player.games > 0 ? (player.hits / player.games).toFixed(1) : '0';
                 const winPercentTd = document.createElement('td'); winPercentTd.textContent = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) + '%' : '0%';
                 const actionTd = document.createElement('td'); actionTd.classList.add('action-buttons');
 
-                const hitButton = document.createElement('button'); hitButton.textContent = '🎯 +1'; hitButton.addEventListener('click', () => { player.hits++; saveData(); renderTable(); drawChart(); });
-                const winButton = document.createElement('button'); winButton.textContent = '🏆 +1'; winButton.addEventListener('click', () => { player.wins++; saveData(); renderTable(); drawChart(); });
-                const gameButton = document.createElement('button'); gameButton.textContent = '🎲 +1'; gameButton.addEventListener('click', () => { player.games++; saveData(); renderTable(); drawChart(); });
+                const hitButton = document.createElement('button');
+                hitButton.textContent = '🎯 +1';
+                hitButton.addEventListener('click', () => { player.hits++; saveData(); renderTable(); drawChart(); });
+
+                const winButton = document.createElement('button');
+                winButton.textContent = '🏆 +1';
+                winButton.addEventListener('click', () => { player.wins++; saveData(); renderTable(); drawChart(); });
+
+                const gameButton = document.createElement('button');
+                gameButton.textContent = '🎲 +1';
+                gameButton.addEventListener('click', () => { player.games++; saveData(); renderTable(); drawChart(); });
+
+                const bottleButton = document.createElement('button');
+                bottleButton.textContent = '🍺 +1';
+                bottleButton.addEventListener('click', () => { player.bottles++; saveData(); renderTable(); drawChart(); });
 
                 const barContainer = document.createElement('div'); barContainer.classList.add('progress-bar');
                 const barFill = document.createElement('div'); barFill.classList.add('progress-fill');
@@ -295,10 +333,12 @@
                 actionTd.appendChild(hitButton);
                 actionTd.appendChild(winButton);
                 actionTd.appendChild(gameButton);
+                actionTd.appendChild(bottleButton);
                 tr.appendChild(nameTd);
                 tr.appendChild(hitsTd);
                 tr.appendChild(winsTd);
                 tr.appendChild(gamesTd);
+                tr.appendChild(bottlesTd);
                 tr.appendChild(hitsPerGameTd);
                 tr.appendChild(winPercentTd);
                 tr.appendChild(actionTd);
@@ -318,29 +358,25 @@
         document.getElementById('exportImageButton').addEventListener('click', exportImage);
         document.getElementById('resetButton').addEventListener('click', () => { if (confirm('Möchtest du wirklich alle Daten zurücksetzen?')) {
             players = [
-                {name: 'Voike', hits: 0, wins: 0, games: 0},
-                {name: 'Will', hits: 0, wins: 0, games: 0},
-                {name: 'Tobi', hits: 0, wins: 0, games: 0},
-                {name: 'Flecker', hits: 0, wins: 0, games: 0},
-                {name: 'Merkwitz', hits: 0, wins: 0, games: 0},
-                {name: 'Alex', hits: 0, wins: 0, games: 0},
-                {name: 'Niggles', hits: 0, wins: 0, games: 0},
-                {name: 'Marci', hits: 0, wins: 0, games: 0},
-                {name: 'Frank', hits: 0, wins: 0, games: 0},
-                {name: 'Krane', hits: 0, wins: 0, games: 0},
-                {name: 'Sebastian', hits: 0, wins: 0, games: 0},
-                {name: 'Sven', hits: 0, wins: 0, games: 0},
-                {name: 'Manu', hits: 0, wins: 0, games: 0},
-                {name: 'Robert', hits: 0, wins: 0, games: 0},
-                {name: 'Daniel', hits: 0, wins: 0, games: 0},
-                {name: 'Dominic', hits: 0, wins: 0, games: 0},
-                {name: 'Rogge', hits: 0, wins: 0, games: 0},
-                {name: 'Tim', hits: 0, wins: 0, games: 0}
-            ];
-            saveData();
-            renderTable();
-        } });
-
+                {name: 'Voike', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Will', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Tobi', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Flecker', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Merkwitz', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Alex', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Niggles', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Marci', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Frank', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Krane', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Sebastian', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Sven', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Manu', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Robert', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Daniel', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Dominic', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Rogge', hits: 0, wins: 0, games: 0, bottles: 0},
+                {name: 'Tim', hits: 0, wins: 0, games: 0, bottles: 0}
+            ]; saveData(); renderTable(); } });
         window.addEventListener('load', () => { loadDefaults(); renderTable(); });
     </script>
     <script>
