@@ -54,14 +54,14 @@
             flex-direction: column;
             gap: 15px;
         }
-        #controlSection { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+        #controlSection { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; }
         #controlSection button {
             background-color: var(--button-color);
             color: var(--secondary-color);
             border: none;
             border-radius: 6px;
-            padding: 10px 15px;
-            font-size: 0.9rem;
+            padding: 14px 20px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
@@ -89,7 +89,7 @@
             overflow-x: auto;
         }
         table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 600px; border-radius: 8px; }
-        th, td { padding: 12px; text-align: center; font-size: 0.9rem; }
+        th, td { padding: 8px; text-align: center; font-size: 0.9rem; }
         th { background-color: var(--accent-color); color: var(--secondary-color); text-transform: uppercase; letter-spacing: 1px; }
         tbody tr { transition: background-color 0.2s ease; }
         tbody tr:nth-child(even) { background-color: var(--background-color); }
@@ -98,8 +98,8 @@
         .second-place { background-color: var(--silver) !important; }
         .third-place { background-color: var(--bronze) !important; }
         td { border-bottom: 1px solid #ddd; }
-        .action-buttons { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        .action-buttons button { background-color: var(--button-color); padding: 8px 12px; border-radius: 6px; color: var(--secondary-color); font-size: 0.8rem; font-weight: 600; transition: background-color 0.3s ease, transform 0.2s ease; }
+        .action-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        .action-buttons button { background-color: var(--button-color); padding: 10px 16px; border-radius: 6px; color: var(--secondary-color); font-size: 0.85rem; font-weight: 600; transition: background-color 0.3s ease, transform 0.2s ease; }
         .action-buttons button:hover { background-color: var(--button-hover); transform: translateY(-1px); }
         .progress-bar { width: 100%; background-color: #e0e0e0; border-radius: 6px; overflow: hidden; height: 10px; margin-top: 3px; }
         .progress-fill { height: 100%; background-color: var(--accent-color); }
@@ -158,13 +158,13 @@
                 <thead>
                     <tr>
                         <th>Spieler</th>
-                        <th>Treffer</th>
-                        <th>Siege</th>
-                        <th>Spiele</th>
-                        <th>Flaschentreffer</th>
-                        <th>Treffer/Spiel</th>
-                        <th>Siege/Spiel (%)</th>
-                        <th>Aktion</th>
+                        <th>🎯</th>
+                        <th>🏆</th>
+                        <th>🎲</th>
+                        <th>🍺</th>
+                        <th>🎯/🎲</th>
+                        <th>🏆/🎲</th>
+                        <th>⚙️</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -215,170 +215,3 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = 'flunkyball_stats.csv';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function exportImage() {
-            const table = document.getElementById('statsTable');
-            html2canvas(table).then(canvas => {
-                const url = canvas.toDataURL('image/png');
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'flunkyball_table.png';
-                a.click();
-            });
-        }
-
-        function updateOverview() {
-            const totalPlayersEl = document.getElementById('totalPlayers');
-            const totalHitsEl = document.getElementById('totalHits');
-            const totalBottlesEl = document.getElementById('totalBottles');
-            const avgHitsEl = document.getElementById('avgHits');
-            const topBottlesEl = document.getElementById('topBottles');
-            const topHitsPerGameEl = document.getElementById('topHitsPerGame');
-            const topScorerEl = document.getElementById('topScorer');
-            const topWinnerEl = document.getElementById('topWinner');
-
-            const totalPlayers = players.length;
-            const totalHits = players.reduce((sum, p) => sum + p.hits, 0);
-            const totalBottles = players.reduce((sum, p) => sum + p.bottles, 0);
-            const avgHits = totalPlayers > 0 ? (totalHits / totalPlayers).toFixed(1) : 0;
-
-            totalPlayersEl.textContent = totalPlayers;
-            totalHitsEl.textContent = totalHits;
-            totalBottlesEl.textContent = totalBottles;
-            avgHitsEl.textContent = avgHits;
-
-            const sortedBottles = [...players].sort((a, b) => b.bottles - a.bottles);
-            const top3Bottles = sortedBottles.slice(0, 3).map((p, i) => `${i+1}. <strong>${p.name}</strong> (${p.bottles})`).join("<br>");
-            topBottlesEl.innerHTML = top3Bottles;
-
-            const sortedHitsPerGame = [...players].filter(p => p.games > 0)
-                .sort((a, b) => (b.hits / b.games) - (a.hits / a.games));
-            const top3HitsPerGame = sortedHitsPerGame.slice(0, 3)
-                .map((p, i) => `${i+1}. <strong>${p.name}</strong> (${(p.hits / p.games).toFixed(1)})`).join("<br>");
-            topHitsPerGameEl.innerHTML = top3HitsPerGame || '-';
-
-            const maxHits = Math.max(...players.map(p => p.hits));
-            const topHitPlayers = players.filter(p => p.hits === maxHits).map(p => `<strong>${p.name}</strong> (${p.hits})`);
-            topScorerEl.innerHTML = topHitPlayers.join(', ');
-
-            const sortedWins = [...players].sort((a, b) => b.wins - a.wins);
-            const podium = sortedWins.slice(0, 3).map((p, i) => `${i+1}. <strong>${p.name}</strong> (${p.wins})`).join("<br>");
-            topWinnerEl.innerHTML = podium;
-        }
-
-        function drawChart() {
-            const ctx = document.getElementById('hitsChart').getContext('2d');
-            const labels = players.map(p => p.name);
-            const data = players.map(p => p.hits);
-            if (hitsChart) hitsChart.destroy();
-            hitsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{ label: 'Treffer', data, backgroundColor: 'rgba(255, 102, 0, 0.7)' }]
-                },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        function renderTable() {
-            const tbody = document.querySelector('#statsTable tbody');
-            tbody.innerHTML = '';
-            players.forEach(player => {
-                const tr = document.createElement('tr');
-                const sortedWins = [...players].sort((a, b) => b.wins - a.wins);
-                const rank = sortedWins.findIndex(p => p.name === player.name) + 1;
-                if (rank === 1) tr.classList.add('first-place');
-                else if (rank === 2) tr.classList.add('second-place');
-                else if (rank === 3) tr.classList.add('third-place');
-
-                const nameTd = document.createElement('td'); nameTd.innerHTML = `<strong>${player.name}</strong>`;
-                const hitsTd = document.createElement('td'); hitsTd.textContent = player.hits;
-                const winsTd = document.createElement('td'); winsTd.textContent = player.wins;
-                const gamesTd = document.createElement('td'); gamesTd.textContent = player.games;
-                const bottlesTd = document.createElement('td'); bottlesTd.textContent = player.bottles;
-                const hitsPerGameTd = document.createElement('td'); hitsPerGameTd.textContent = player.games > 0 ? (player.hits / player.games).toFixed(1) : '0';
-                const winPercentTd = document.createElement('td'); winPercentTd.textContent = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) + '%' : '0%';
-                const actionTd = document.createElement('td'); actionTd.classList.add('action-buttons');
-
-                const hitButton = document.createElement('button');
-                hitButton.textContent = '🎯 +1';
-                hitButton.addEventListener('click', () => { player.hits++; saveData(); renderTable(); drawChart(); });
-
-                const winButton = document.createElement('button');
-                winButton.textContent = '🏆 +1';
-                winButton.addEventListener('click', () => { player.wins++; saveData(); renderTable(); drawChart(); });
-
-                const gameButton = document.createElement('button');
-                gameButton.textContent = '🎲 +1';
-                gameButton.addEventListener('click', () => { player.games++; saveData(); renderTable(); drawChart(); });
-
-                const bottleButton = document.createElement('button');
-                bottleButton.textContent = '🍺 +1';
-                bottleButton.addEventListener('click', () => { player.bottles++; saveData(); renderTable(); drawChart(); });
-
-                const barContainer = document.createElement('div'); barContainer.classList.add('progress-bar');
-                const barFill = document.createElement('div'); barFill.classList.add('progress-fill');
-                if (player.games > 0) { barFill.style.width = ((player.wins / player.games) * 100) + '%'; } else { barFill.style.width = '0%'; }
-                barContainer.appendChild(barFill);
-
-                actionTd.appendChild(hitButton);
-                actionTd.appendChild(winButton);
-                actionTd.appendChild(gameButton);
-                actionTd.appendChild(bottleButton);
-                tr.appendChild(nameTd);
-                tr.appendChild(hitsTd);
-                tr.appendChild(winsTd);
-                tr.appendChild(gamesTd);
-                tr.appendChild(bottlesTd);
-                tr.appendChild(hitsPerGameTd);
-                tr.appendChild(winPercentTd);
-                tr.appendChild(actionTd);
-                tbody.appendChild(tr);
-            });
-            updateOverview();
-            drawChart();
-        }
-
-        function loadDefaults() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) { try { players = JSON.parse(saved); } catch {} }
-        }
-
-        document.getElementById('sortHitsButton').addEventListener('click', () => { players.sort((a, b) => b.hits - a.hits); renderTable(); });
-        document.getElementById('exportButton').addEventListener('click', exportCSV);
-        document.getElementById('exportImageButton').addEventListener('click', exportImage);
-        document.getElementById('resetButton').addEventListener('click', () => { if (confirm('Möchtest du wirklich alle Daten zurücksetzen?')) {
-            players = [
-                {name: 'Voike', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Will', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Tobi', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Flecker', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Merkwitz', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Alex', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Niggles', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Marci', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Frank', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Krane', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Sebastian', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Sven', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Manu', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Robert', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Daniel', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Dominic', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Rogge', hits: 0, wins: 0, games: 0, bottles: 0},
-                {name: 'Tim', hits: 0, wins: 0, games: 0, bottles: 0}
-            ]; saveData(); renderTable(); } });
-        window.addEventListener('load', () => { loadDefaults(); renderTable(); });
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .catch(err => console.error('SW-Registrierung fehlgeschlagen:', err));
-      }
-    </script>
-</body>
-</html>
