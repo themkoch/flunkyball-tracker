@@ -88,9 +88,9 @@
             width: 100%;
             overflow-x: auto;
         }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 600px; border-radius: 8px; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 500px; border-radius: 8px; }
         th, td { padding: 8px; text-align: center; font-size: 0.9rem; }
-        th { background-color: var(--accent-color); color: var(--secondary-color); text-transform: uppercase; letter-spacing: 1px; }
+        th { background-color: var(--accent-color); color: var(--secondary-color); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
         tbody tr { transition: background-color 0.2s ease; }
         tbody tr:nth-child(even) { background-color: var(--background-color); }
         tbody tr:hover { background-color: #e0e0e0; }
@@ -138,10 +138,6 @@
                 <p id="topBottles">-</p>
             </div>
             <div class="stat-card">
-                <h3>Top Treffer/Spiel</h3>
-                <p id="topHitsPerGame">-</p>
-            </div>
-            <div class="stat-card">
                 <h3>Top Scorer</h3>
                 <p id="topScorer">-</p>
             </div>
@@ -157,13 +153,11 @@
             <table id="statsTable">
                 <thead>
                     <tr>
-                        <th>Spieler</th>
-                        <th>🎯</th>
-                        <th>🏆</th>
-                        <th>🎲</th>
-                        <th>🍺</th>
-                        <th>🎯/🎲</th>
-                        <th>🏆/🎲</th>
+                        <th data-col="name">Spieler</th>
+                        <th data-col="hits">🎯</th>
+                        <th data-col="wins">🏆</th>
+                        <th data-col="games">🎲</th>
+                        <th data-col="bottles">🍺</th>
                         <th>⚙️</th>
                     </tr>
                 </thead>
@@ -199,19 +193,69 @@
         ];
         let hitsChart;
 
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
-        }
-
+        function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); }
         function exportCSV() {
-            let csv = 'Name,Treffer,Siege,Spiele,Flaschentreffer,Treffer/Spiel,Siege/Spiel (%)\n';
-            players.forEach(p => {
-                const tpg = p.games > 0 ? (p.hits / p.games).toFixed(1) : 0;
-                const wpg = p.games > 0 ? ((p.wins / p.games) * 100).toFixed(1) : 0;
-                csv += `${p.name},${p.hits},${p.wins},${p.games},${p.bottles},${tpg},${wpg}%\n`;
-            });
+            let csv = 'Name,Treffer,Siege,Spiele,Flaschentreffer\n';
+            players.forEach(p => { csv += `${p.name},${p.hits},${p.wins},${p.games},${p.bottles}\n`; });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'flunkyball_stats.csv';
+            const a = document.createElement('a'); a.href = url; a.download = 'flunkyball_stats.csv'; a.click(); URL.revokeObjectURL(url);
+        }
+        function exportImage() {
+            const table = document.getElementById('statsTable'); html2canvas(table).then(canvas => { const url = canvas.toDataURL('image/png'); const a = document.createElement('a'); a.href = url; a.download = 'flunkyball_table.png'; a.click(); });
+        }
+        function updateOverview() {
+            document.getElementById('totalPlayers').textContent = players.length;
+            document.getElementById('totalHits').textContent = players.reduce((s,p)=>s+p.hits,0);
+            document.getElementById('totalBottles').textContent = players.reduce((s,p)=>s+p.bottles,0);
+            document.getElementById('avgHits').textContent = players.length>0?(players.reduce((s,p)=>s+p.hits,0)/players.length).toFixed(1):0;
+            const sortedBottles=[...players].sort((a,b)=>b.bottles-a.bottles);
+            document.getElementById('topBottles').innerHTML = sortedBottles.slice(0,3).map((p,i)=>`${i+1}. <strong>${p.name}</strong> (${p.bottles})`).join("<br>");
+            const maxHits=Math.max(...players.map(p=>p.hits));
+            document.getElementById('topScorer').innerHTML = players.filter(p=>p.hits===maxHits).map(p=>`<strong>${p.name}</strong> (${p.hits})`).join(', ');
+            const sortedWins=[...players].sort((a,b)=>b.wins-a.wins);
+            document.getElementById('topWinner').innerHTML = sortedWins.slice(0,3).map((p,i)=>`${i+1}. <strong>${p.name}</strong> (${p.wins})`).join("<br>");
+        }
+        function drawChart() {
+            const ctx=document.getElementById('hitsChart').getContext('2d');
+            const labels=players.map(p=>p.name);
+            const data=players.map(p=>p.hits);
+            if(hitsChart) hitsChart.destroy();
+            hitsChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Treffer',data,backgroundColor:'rgba(255,102,0,0.7)'}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+        }
+        function renderTable() {
+            const tbody=document.querySelector('#statsTable tbody'); tbody.innerHTML='';
+            players.forEach(player=>{
+                const tr=document.createElement('tr');
+                const sortedWins=[...players].sort((a,b)=>b.wins-a.wins);
+                const rank=sortedWins.findIndex(p=>p.name===player.name)+1;
+                if(rank===1) tr.classList.add('first-place'); else if(rank===2) tr.classList.add('second-place'); else if(rank===3) tr.classList.add('third-place');
+                const nameTd=document.createElement('td'); nameTd.innerHTML=`<strong>${player.name}</strong>`;
+                const hitsTd=document.createElement('td'); hitsTd.textContent=player.hits;
+                const winsTd=document.createElement('td'); winsTd.textContent=player.wins;
+                const gamesTd=document.createElement('td'); gamesTd.textContent=player.games;
+                const bottlesTd=document.createElement('td'); bottlesTd.textContent=player.bottles;
+                const actionTd=document.createElement('td'); actionTd.classList.add('action-buttons');
+                const hitButton=document.createElement('button'); hitButton.textContent='🎯 +1'; hitButton.addEventListener('click',()=>{player.hits++;saveData();renderTable();drawChart();});
+                const winButton=document.createElement('button'); winButton.textContent='🏆 +1'; winButton.addEventListener('click',()=>{player.wins++;saveData();renderTable();drawChart();});
+                const gameButton=document.createElement('button'); gameButton.textContent='🎲 +1'; gameButton.addEventListener('click',()=>{player.games++;saveData();renderTable();drawChart();});
+                const bottleButton=document.createElement('button'); bottleButton.textContent='🍺 +1'; bottleButton.addEventListener('click',()=>{player.bottles++;saveData();renderTable();drawChart();});
+                const barContainer=document.createElement('div'); barContainer.classList.add('progress-bar'); const barFill=document.createElement('div'); barFill.classList.add('progress-fill'); if(player.games>0){barFill.style.width=((player.wins/player.games)*100)+'%'}else{barFill.style.width='0%'} barContainer.appendChild(barFill);
+                actionTd.appendChild(hitButton);actionTd.appendChild(winButton);actionTd.appendChild(gameButton);actionTd.appendChild(bottleButton);
+                tr.appendChild(nameTd);tr.appendChild(hitsTd);tr.appendChild(winsTd);tr.appendChild(gamesTd);tr.appendChild(bottlesTd);tr.appendChild(actionTd);
+                tbody.appendChild(tr);
+            });
+            updateOverview(); drawChart();
+        }
+        function loadDefaults(){ const saved=localStorage.getItem(STORAGE_KEY); if(saved){ try{players=JSON.parse(saved);}catch{} }}
+        document.querySelectorAll('th[data-col]').forEach(th=>{ th.addEventListener('click',()=>{ const col=th.getAttribute('data-col'); players.sort((a,b)=>{ if(col==='name') return a.name.localeCompare(b.name); if(col==='hits') return b.hits-a.hits; if(col==='wins') return b.wins-a.wins; if(col==='games') return b.games-a.games; if(col==='bottles') return b.bottles-a.bottles; return 0; }); renderTable(); }); });
+        document.getElementById('exportButton').addEventListener('click',exportCSV);
+        document.getElementById('exportImageButton').addEventListener('click',exportImage);
+        document.getElementById('resetButton').addEventListener('click',()=>{ if(confirm('Möchtest du wirklich alle Daten zurücksetzen?')){ players=[{name:'Voike',hits:0,wins:0,games:0,bottles:0},{name:'Will',hits:0,wins:0,games:0,bottles:0},{name:'Tobi',hits:0,wins:0,games:0,bottles:0},{name:'Flecker',hits:0,wins:0,games:0,bottles:0},{name:'Merkwitz',hits:0,wins:0,games:0,bottles:0},{name:'Alex',hits:0,wins:0,games:0,bottles:0},{name:'Niggles',hits:0,wins:0,games:0,bottles:0},{name:'Marci',hits:0,wins:0,games:0,bottles:0},{name:'Frank',hits:0,wins:0,games:0,bottles:0},{name:'Krane',hits:0,wins:0,games:0,bottles:0},{name:'Sebastian',hits:0,wins:0,games:0,bottles:0},{name:'Sven',hits:0,wins:0,games:0,bottles:0},{name:'Manu',hits:0,wins:0,games:0,bottles:0},{name:'Robert',hits:0,wins:0,games:0,bottles:0},{name:'Daniel',hits:0,wins:0,games:0,bottles:0},{name:'Dominic',hits:0,wins:0,games:0,bottles:0},{name:'Rogge',hits:0,wins:0,games:0,bottles:0},{name:'Tim',hits:0,wins:0,games:0,bottles:0}]; saveData(); renderTable(); }});
+        window.addEventListener('load',()=>{ loadDefaults(); renderTable(); });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) { navigator.serviceWorker.register('service-worker.js').catch(err=>console.error('SW-Registrierung fehlgeschlagen:',err)); }
+    </script>
+</body>
+</html>
